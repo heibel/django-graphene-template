@@ -1,0 +1,11 @@
+{% block subject %}
+    [{{ site_name }}] Welcome {{ user.first_name }}
+{% endblock %}
+
+{% block text_body %}
+    Dear {{ user.first_name }},
+
+    Welcome!
+
+    The awesome {{ site_name }} team
+{% endblock %}

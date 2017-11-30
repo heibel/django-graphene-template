@@ -1,0 +1,15 @@
+{% block subject %}
+    [{{ site_name }}] Dear {{ user.first_name }}, your account is created
+{% endblock %}
+
+{% block text_body %}
+    Dear {{ user.first_name }},
+
+    Your account has been created for the site {{ site_name }}, and is
+    available at {{ domain }}/{{ activation_token }}.
+
+    See you there soon!
+
+
+    The awesome {{ site_name }} team
+{% endblock %}

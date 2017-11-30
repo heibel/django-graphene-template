@@ -1,0 +1,14 @@
+sudo: false
+
+language: python
+
+cache: pip
+
+python:
+  - 3.6
+
+install:
+  - pip install -r requirements/test.txt
+
+script:
+  - pytest -n 4
