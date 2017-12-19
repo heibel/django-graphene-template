@@ -4,7 +4,7 @@ import pytest
 
 from django.core import signing
 
-from klasse.users.utils import generate_activation_token
+from klasse.users.utils import generate_activation_token, password_reset_token_generator
 
 
 @pytest.mark.django_db
@@ -275,6 +275,275 @@ def test_login_snapshot(schema, user, snapshot, request_with_session):
     result = schema.execute(query, context_value=request_with_session, variable_values=variables)
 
     snapshot.assert_match(result.data)
+
+
+@pytest.mark.django_db
+def test_password_reset_mutation_success(schema, user, mailoutbox):
+    user.is_active = True
+    user.save()
+
+    query = '''
+        mutation PasswordReset($email: String!) {
+            passwordReset(email: $email) {
+                success
+            }
+        }
+    '''
+
+    variables = {'email': 'user@example.com'}
+
+    expected = {
+        'passwordReset': {
+            'success': True,
+        },
+    }
+
+    result = schema.execute(query, variable_values=variables)
+
+    assert not result.errors
+    assert result.data == expected
+    assert len(mailoutbox) == 1
+
+
+@pytest.mark.django_db
+def test_password_reset_mutation_error(schema, mailoutbox):
+    query = '''
+        mutation PasswordReset($email: String!) {
+            passwordReset(email: $email) {
+                success
+            }
+        }
+    '''
+
+    variables = {'email': 'unknown@example.com'}
+
+    expected = {
+        'passwordReset': {
+            'success': True,
+        },
+    }
+
+    result = schema.execute(query, variable_values=variables)
+
+    assert not result.errors
+    assert result.data == expected
+    assert len(mailoutbox) == 0
+
+
+def test_password_reset_confirm_mutation_success(schema, user):
+    user.is_active = True
+    user.save()
+
+    query = '''
+        mutation PasswordResetConfirm(
+            $email: String!,
+            $password: String!,
+            $password_repeat: String!,
+            $password_reset_token: String!
+        ) {
+            passwordResetConfirm(
+                email: $email,
+                password: $password,
+                passwordRepeat: $password_repeat,
+                passwordResetToken: $password_reset_token
+            ) {
+                success
+                errors
+            }
+        }
+    '''
+
+    variables = {
+        'email': 'user@example.com',
+        'password': 'p@ssword!',
+        'password_repeat': 'p@ssword!',
+        'password_reset_token': password_reset_token_generator.make_token(user),
+    }
+
+    expected = {
+        'passwordResetConfirm': {
+            'success': True,
+            'errors': None,
+        },
+    }
+
+    result = schema.execute(query, variable_values=variables)
+
+    assert not result.errors
+    assert result.data == expected
+
+
+@pytest.mark.django_db
+def test_password_reset_confirm_mutation_matching_passwords_error(schema, user):
+    user.is_active = True
+    user.save()
+
+    query = '''
+        mutation PasswordResetConfirm(
+            $email: String!,
+            $password: String!,
+            $password_repeat: String!,
+            $password_reset_token: String!
+        ) {
+            passwordResetConfirm(
+                email: $email,
+                password: $password,
+                passwordRepeat: $password_repeat,
+                passwordResetToken: $password_reset_token
+            ) {
+                success
+                errors
+            }
+        }
+    '''
+
+    variables = {
+        'email': 'user@example.com',
+        'password': 'p@ssword!',
+        'password_repeat': 'p@ssw0rd!',
+        'password_reset_token': password_reset_token_generator.make_token(user),
+    }
+
+    expected = {
+        'passwordResetConfirm': {
+            'success': False,
+            'errors': ['Passwords don\'t match'],
+        },
+    }
+
+    result = schema.execute(query, variable_values=variables)
+
+    assert not result.errors
+    assert result.data == expected
+
+
+@pytest.mark.django_db
+def test_password_reset_confirm_mutation_unkown_user_error(schema, user):
+    user.is_active = True
+    user.save()
+
+    query = '''
+        mutation PasswordResetConfirm(
+            $email: String!,
+            $password: String!,
+            $password_repeat: String!,
+            $password_reset_token: String!
+        ) {
+            passwordResetConfirm(
+                email: $email,
+                password: $password,
+                passwordRepeat: $password_repeat,
+                passwordResetToken: $password_reset_token
+            ) {
+                success
+                errors
+            }
+        }
+    '''
+
+    variables = {
+        'email': 'unknown@example.com',
+        'password': 'p@ssword!',
+        'password_repeat': 'p@ssword!',
+        'password_reset_token': password_reset_token_generator.make_token(user),
+    }
+
+    expected = {
+        'passwordResetConfirm': {
+            'success': False,
+            'errors': ['Unknown user'],
+        },
+    }
+
+    result = schema.execute(query, variable_values=variables)
+
+    assert not result.errors
+    assert result.data == expected
+
+
+@pytest.mark.django_db
+def test_password_reset_confirm_mutation_token_error(schema, user):
+    user.is_active = True
+    user.save()
+
+    query = '''
+        mutation PasswordResetConfirm(
+            $email: String!,
+            $password: String!,
+            $password_repeat: String!,
+            $password_reset_token: String!
+        ) {
+            passwordResetConfirm(
+                email: $email,
+                password: $password,
+                passwordRepeat: $password_repeat,
+                passwordResetToken: $password_reset_token
+            ) {
+                success
+                errors
+            }
+        }
+    '''
+
+    variables = {
+        'email': 'user@example.com',
+        'password': 'p@ssword!',
+        'password_repeat': 'p@ssword!',
+        'password_reset_token': '12345',
+    }
+
+    expected = {
+        'passwordResetConfirm': {
+            'success': False,
+            'errors': ['Stale token'],
+        },
+    }
+
+    result = schema.execute(query, variable_values=variables)
+
+    assert not result.errors
+    assert result.data == expected
+
+
+@pytest.mark.django_db
+def test_password_reset_confirm_mutation_inactive_user_error(schema, user):
+    query = '''
+        mutation PasswordResetConfirm(
+            $email: String!,
+            $password: String!,
+            $password_repeat: String!,
+            $password_reset_token: String!
+        ) {
+            passwordResetConfirm(
+                email: $email,
+                password: $password,
+                passwordRepeat: $password_repeat,
+                passwordResetToken: $password_reset_token
+            ) {
+                success
+                errors
+            }
+        }
+    '''
+
+    variables = {
+        'email': 'user@example.com',
+        'password': 'p@ssword!',
+        'password_repeat': 'p@ssword!',
+        'password_reset_token': password_reset_token_generator.make_token(user),
+    }
+
+    expected = {
+        'passwordResetConfirm': {
+            'success': False,
+            'errors': ['Inactive user'],
+        },
+    }
+
+    result = schema.execute(query, variable_values=variables)
+
+    assert not result.errors
+    assert result.data == expected
 
 
 @pytest.mark.django_db

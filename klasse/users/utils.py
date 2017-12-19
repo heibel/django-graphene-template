@@ -1,12 +1,19 @@
 from nameparser import HumanName
 
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core import signing
 
-from klasse.users.emails import ActivationEmail, WelcomeEmail
+from klasse.users.emails import ActivationEmail, PasswordResetEmail, WelcomeEmail
+
+password_reset_token_generator = PasswordResetTokenGenerator()
 
 
 def generate_activation_token(user):
     return signing.dumps(obj=user.email)
+
+
+def generate_password_reset_token(user):
+    return password_reset_token_generator.make_token(user=user)
 
 
 def parse_name(name):
@@ -37,3 +44,14 @@ def send_welcome_email(user, request=None):
         })
 
     welcome_email.send(to=[user.email])
+
+
+def send_password_reset_email(user, request=None):
+    password_reset_email = PasswordResetEmail(
+        request=request,
+        context={
+            'user': user,
+            'password_reset_token': generate_password_reset_token(user)
+        })
+
+    password_reset_email.send(to=[user.email])

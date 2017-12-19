@@ -5,7 +5,10 @@ from django.core import signing
 from django.db import IntegrityError
 
 from .schema import UserType
-from .utils import parse_name, send_activation_email, send_welcome_email
+from .utils import (parse_name, password_reset_token_generator, send_activation_email,
+                    send_password_reset_email, send_welcome_email)
+
+UserModel = get_user_model()
 
 
 class Register(graphene.Mutation):
@@ -77,6 +80,55 @@ class Login(graphene.Mutation):
         return Login(success=False, errors=['Email and/or password are unknown'])
 
 
+class PasswordReset(graphene.Mutation):
+
+    class Arguments:
+        email = graphene.String()
+
+    success = graphene.Boolean()
+
+    def mutate(self, info, email):
+        try:
+            user = get_user_model().objects.get(email=email)
+            send_password_reset_email(user, request=info.context)
+        except UserModel.DoesNotExist:
+            pass
+
+        return PasswordReset(success=True)
+
+
+class PasswordResetConfirm(graphene.Mutation):
+
+    class Arguments:
+        email = graphene.String()
+        password = graphene.String()
+        password_repeat = graphene.String()
+        password_reset_token = graphene.String()
+
+    success = graphene.Boolean()
+    errors = graphene.List(graphene.String)
+
+    def mutate(self, _, email, password, password_repeat, password_reset_token):
+        if password != password_repeat:
+            return PasswordResetConfirm(success=False, errors=['Passwords don\'t match'])
+
+        try:
+            user = get_user_model().objects.get(email=email)
+        except get_user_model().DoesNotExist:
+            return PasswordResetConfirm(success=False, errors=['Unknown user'])
+
+        if not password_reset_token_generator.check_token(user, password_reset_token):
+            return PasswordResetConfirm(success=False, errors=['Stale token'])
+
+        if not user.is_active or not user.has_usable_password():
+            return PasswordResetConfirm(success=False, errors=['Inactive user'])
+
+        user.set_password(password)
+        user.save()
+
+        return PasswordResetConfirm(success=True)
+
+
 class Logout(graphene.Mutation):
     success = graphene.Boolean()
 
@@ -110,5 +162,7 @@ class UserMutation(object):
     register = Register.Field()
     activate = Activate.Field()
     login = Login.Field()
+    password_reset = PasswordReset.Field()
+    password_reset_confirm = PasswordResetConfirm.Field()
     logout = Logout.Field()
     update = Update.Field()

@@ -7,3 +7,7 @@ class ActivationEmail(BaseEmailMessage):
 
 class WelcomeEmail(BaseEmailMessage):
     template_name = 'emails/welcome_email.txt'
+
+
+class PasswordResetEmail(BaseEmailMessage):
+    template_name = 'emails/password_reset.txt'
