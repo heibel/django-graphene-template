@@ -19,6 +19,7 @@ class Base(Configuration):
 
         # Third-party
         'graphene_django',
+        'corsheaders',
 
         # Project
         'klasse.users',
@@ -26,11 +27,13 @@ class Base(Configuration):
 
     MIDDLEWARE = [
         'django.middleware.security.SecurityMiddleware',
-        'django.contrib.sessions.middleware.SessionMiddleware',
         'django.middleware.common.CommonMiddleware',
-        'django.middleware.csrf.CsrfViewMiddleware',
-        'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+        # Third-party
+        'corsheaders.middleware.CorsMiddleware',
+
+        # Project
+        'klasse.users.middleware.JWTAuthenticationMiddleware',
     ]
 
     ROOT_URLCONF = 'config.urls'

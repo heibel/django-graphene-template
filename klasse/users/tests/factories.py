@@ -6,16 +6,20 @@ from django.contrib.auth.models import Group
 
 
 class UserFactory(DjangoModelFactory):
-    email = factory.Sequence(lambda n: 'user.{}@example.com'.format(n + 1))
 
     class Meta:
         model = get_user_model()
         django_get_or_create = ('email', )
 
+    email = factory.Faker('email')
+    first_name = factory.Faker('first_name')
+    last_name = factory.Faker('last_name')
+
 
 class GroupFactory(DjangoModelFactory):
-    name = factory.Sequence(lambda n: 'group.{}'.format(n + 1))
 
     class Meta:
         model = Group
         django_get_or_create = ('name', )
+
+    name = factory.Sequence(lambda n: 'group.{}'.format(n + 1))

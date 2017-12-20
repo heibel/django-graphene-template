@@ -10,13 +10,8 @@ snapshots = Snapshot()
 snapshots['test_login_snapshot 1'] = {
     'login': {
         'errors': None,
-        'success': True
-    }
-}
-
-snapshots['test_logout_snapshot 1'] = {
-    'logout': {
-        'success': True
+        'success': True,
+        'token': 'sample.jwt.token'
     }
 }
 

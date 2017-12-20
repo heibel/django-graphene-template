@@ -27,4 +27,4 @@ test:
 	pytest
 
 coverage:
-	pytest --cov=klasse
+	pytest --cov=klasse --cov-report term-missing

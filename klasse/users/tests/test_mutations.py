@@ -4,7 +4,8 @@ import pytest
 
 from django.core import signing
 
-from klasse.users.utils import generate_activation_token, password_reset_token_generator
+from klasse.users.utils import (generate_activation_token, jwt_encode_handler, jwt_payload_handler,
+                                password_reset_token_generator)
 
 
 @pytest.mark.django_db
@@ -81,7 +82,6 @@ def test_register_snapshot(schema, snapshot, mailoutbox):
     snapshot.assert_match(mailoutbox[0].subject)
 
 
-@pytest.mark.django_db
 def test_activate_mutation_success(schema, user, mailoutbox):
     activation_token = generate_activation_token(user)
 
@@ -116,7 +116,6 @@ def test_activate_mutation_success(schema, user, mailoutbox):
     assert len(mailoutbox) == 1
 
 
-@pytest.mark.django_db
 def test_activate_mutation_user_error(schema, user):
     activation_token = generate_activation_token(user)
 
@@ -147,7 +146,6 @@ def test_activate_mutation_user_error(schema, user):
     assert result.data == expected
 
 
-@pytest.mark.django_db
 def test_activate_mutation_token_error(schema, user):
     activation_token = generate_activation_token(user)
 
@@ -178,7 +176,6 @@ def test_activate_mutation_token_error(schema, user):
     assert result.data == expected
 
 
-@pytest.mark.django_db
 def test_activate_mutation_snapshot(schema, user, mailoutbox, snapshot):
     activation_token = generate_activation_token(user)
 
@@ -201,8 +198,7 @@ def test_activate_mutation_snapshot(schema, user, mailoutbox, snapshot):
     snapshot.assert_match(mailoutbox[0].subject)
 
 
-@pytest.mark.django_db
-def test_login_mutation_success(schema, user, request_with_session):
+def test_login_mutation_success(schema, user):
     user.is_active = True
     user.save()
 
@@ -211,6 +207,7 @@ def test_login_mutation_success(schema, user, request_with_session):
             login(email: $email, password: $password) {
                 success
                 errors
+                token
             }
         }
     '''
@@ -221,22 +218,25 @@ def test_login_mutation_success(schema, user, request_with_session):
         'login': {
             'success': True,
             'errors': None,
+            'token': 'sample.jwt.token',
         },
     }
 
-    result = schema.execute(query, context_value=request_with_session, variable_values=variables)
+    with mock.patch('klasse.users.utils.jwt.encode', return_value=b'sample.jwt.token'):
+        result = schema.execute(query, variable_values=variables)
 
     assert not result.errors
     assert result.data == expected
 
 
 @pytest.mark.django_db
-def test_login_mutation_error(schema, request_with_session):
+def test_login_mutation_error(schema):
     query = '''
         mutation Login($email: String!, $password: String!) {
             login(email: $email, password: $password) {
                 success
                 errors
+                token
             }
         }
     '''
@@ -247,17 +247,17 @@ def test_login_mutation_error(schema, request_with_session):
         'login': {
             'success': False,
             'errors': ['Email and/or password are unknown'],
+            'token': None
         },
     }
 
-    result = schema.execute(query, context_value=request_with_session, variable_values=variables)
+    result = schema.execute(query, variable_values=variables)
 
     assert not result.errors
     assert result.data == expected
 
 
-@pytest.mark.django_db
-def test_login_snapshot(schema, user, snapshot, request_with_session):
+def test_login_snapshot(schema, user, snapshot):
     user.is_active = True
     user.save()
 
@@ -266,18 +266,77 @@ def test_login_snapshot(schema, user, snapshot, request_with_session):
             login(email: $email, password: $password) {
                 success
                 errors
+                token
             }
         }
     '''
 
-    variables = {'email': 'user@example.com', 'password': 'password'}
+    variables = {
+        'email': 'user@example.com',
+        'password': 'password',
+        'token': 'sample.jwt.token',
+    }
 
-    result = schema.execute(query, context_value=request_with_session, variable_values=variables)
+    with mock.patch('klasse.users.utils.jwt.encode', return_value=b'sample.jwt.token'):
+        result = schema.execute(query, variable_values=variables)
 
     snapshot.assert_match(result.data)
 
 
-@pytest.mark.django_db
+def test_refresh_token_success(schema, user):
+    payload = jwt_payload_handler(user)
+    token = jwt_encode_handler(payload)
+
+    query = '''
+        mutation RefreshToken($token: String!) {
+            refreshToken(token: $token) {
+                success
+                token
+            }
+        }
+    '''
+
+    variables = {'token': token}
+
+    expected = {
+        'refreshToken': {
+            'success': True,
+            'token': 'sample.jwt.token',
+        },
+    }
+
+    with mock.patch('klasse.users.utils.jwt.encode', return_value=b'sample.jwt.token'):
+        result = schema.execute(query, variable_values=variables)
+
+    assert not result.errors
+    assert result.data == expected
+
+
+def test_refresh_token_error(schema):
+    query = '''
+        mutation RefreshToken($token: String!) {
+            refreshToken(token: $token) {
+                success
+                errors
+            }
+        }
+    '''
+
+    variables = {'token': 'invalid.jwt.token'}
+
+    expected = {
+        'refreshToken': {
+            'success': False,
+            'errors': ['Invalid token']
+        },
+    }
+
+    result = schema.execute(query, variable_values=variables)
+
+    assert not result.errors
+    assert result.data == expected
+
+
 def test_password_reset_mutation_success(schema, user, mailoutbox):
     user.is_active = True
     user.save()
@@ -373,7 +432,6 @@ def test_password_reset_confirm_mutation_success(schema, user):
     assert result.data == expected
 
 
-@pytest.mark.django_db
 def test_password_reset_confirm_mutation_matching_passwords_error(schema, user):
     user.is_active = True
     user.save()
@@ -417,8 +475,7 @@ def test_password_reset_confirm_mutation_matching_passwords_error(schema, user):
     assert result.data == expected
 
 
-@pytest.mark.django_db
-def test_password_reset_confirm_mutation_unkown_user_error(schema, user):
+def test_password_reset_confirm_mutation_unknown_user_error(schema, user):
     user.is_active = True
     user.save()
 
@@ -461,7 +518,6 @@ def test_password_reset_confirm_mutation_unkown_user_error(schema, user):
     assert result.data == expected
 
 
-@pytest.mark.django_db
 def test_password_reset_confirm_mutation_token_error(schema, user):
     user.is_active = True
     user.save()
@@ -505,7 +561,6 @@ def test_password_reset_confirm_mutation_token_error(schema, user):
     assert result.data == expected
 
 
-@pytest.mark.django_db
 def test_password_reset_confirm_mutation_inactive_user_error(schema, user):
     query = '''
         mutation PasswordResetConfirm(
@@ -546,44 +601,6 @@ def test_password_reset_confirm_mutation_inactive_user_error(schema, user):
     assert result.data == expected
 
 
-@pytest.mark.django_db
-def test_logout_mutation_success(schema, request_with_session):
-    query = '''
-        mutation {
-            logout {
-                success
-            }
-        }
-    '''
-
-    expected = {
-        'logout': {
-            'success': True,
-        },
-    }
-
-    result = schema.execute(query, context_value=request_with_session)
-
-    assert not result.errors
-    assert result.data == expected
-
-
-@pytest.mark.django_db
-def test_logout_snapshot(schema, snapshot, request_with_session):
-    query = '''
-        mutation {
-            logout {
-                success
-            }
-        }
-    '''
-
-    result = schema.execute(query, context_value=request_with_session)
-
-    snapshot.assert_match(result.data)
-
-
-@pytest.mark.django_db
 def test_update_mutation_success(schema, rf, user):
     request = rf.request()
     request.user = user

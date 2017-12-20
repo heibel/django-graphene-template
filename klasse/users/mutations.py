@@ -1,14 +1,14 @@
 import graphene
+from jwt import InvalidTokenError
 
-from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.contrib.auth import authenticate, get_user_model
 from django.core import signing
 from django.db import IntegrityError
 
 from .schema import UserType
-from .utils import (parse_name, password_reset_token_generator, send_activation_email,
+from .utils import (jwt_decode_handler, jwt_encode_handler, jwt_payload_handler, login_required,
+                    parse_name, password_reset_token_generator, send_activation_email,
                     send_password_reset_email, send_welcome_email)
-
-UserModel = get_user_model()
 
 
 class Register(graphene.Mutation):
@@ -68,16 +68,40 @@ class Login(graphene.Mutation):
 
     success = graphene.Boolean()
     errors = graphene.List(graphene.String)
+    token = graphene.String()
 
-    def mutate(self, info, email, password):
+    def mutate(self, _, email, password):
         user = authenticate(email=email, password=password)
 
-        if user is not None:
-            login(info.context, user)
+        if not user:
+            return Login(success=False, errors=['Email and/or password are unknown'])
 
-            return Login(success=True, errors=None)
+        payload = jwt_payload_handler(user)
+        token = jwt_encode_handler(payload)
 
-        return Login(success=False, errors=['Email and/or password are unknown'])
+        return Login(success=True, errors=None, token=token)
+
+
+class RefreshToken(graphene.Mutation):
+
+    class Arguments:
+        token = graphene.String(required=True)
+
+    success = graphene.Boolean()
+    errors = graphene.List(graphene.String)
+    token = graphene.String()
+
+    def mutate(self, _, token):
+        try:
+            payload = jwt_decode_handler(token)
+        except InvalidTokenError:
+            return RefreshToken(success=False, errors=['Invalid token'])
+
+        user = get_user_model().objects.get(email=payload.get('email'))
+        payload = jwt_payload_handler(user)
+        token = jwt_encode_handler(payload)
+
+        return RefreshToken(success=True, token=token)
 
 
 class PasswordReset(graphene.Mutation):
@@ -91,7 +115,7 @@ class PasswordReset(graphene.Mutation):
         try:
             user = get_user_model().objects.get(email=email)
             send_password_reset_email(user, request=info.context)
-        except UserModel.DoesNotExist:
+        except get_user_model().DoesNotExist:
             pass
 
         return PasswordReset(success=True)
@@ -129,15 +153,6 @@ class PasswordResetConfirm(graphene.Mutation):
         return PasswordResetConfirm(success=True)
 
 
-class Logout(graphene.Mutation):
-    success = graphene.Boolean()
-
-    def mutate(self, info):
-        logout(info.context)
-
-        return Logout(success=True)
-
-
 class Update(graphene.Mutation):
 
     class Arguments:
@@ -148,6 +163,7 @@ class Update(graphene.Mutation):
     errors = graphene.List(graphene.String)
     user = graphene.Field(UserType)
 
+    @login_required
     def mutate(self, info, **fields):
         user = info.context.user
 
@@ -162,7 +178,7 @@ class UserMutation(object):
     register = Register.Field()
     activate = Activate.Field()
     login = Login.Field()
+    refresh_token = RefreshToken.Field()
     password_reset = PasswordReset.Field()
     password_reset_confirm = PasswordResetConfirm.Field()
-    logout = Logout.Field()
     update = Update.Field()

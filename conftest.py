@@ -1,25 +1,12 @@
 import pytest
 
 from config.schema import schema as graphql_schema
+from klasse.users.utils import jwt_encode_handler, jwt_payload_handler
 
 
 @pytest.fixture(scope='session')
 def schema():
     return graphql_schema
-
-
-@pytest.fixture
-def request_with_session(rf):
-    from django.contrib.sessions.middleware import SessionMiddleware
-
-    request = rf.request()
-
-    middleware = SessionMiddleware()
-    middleware.process_request(request)
-
-    request.session.save()
-
-    return request
 
 
 @pytest.fixture
@@ -31,3 +18,11 @@ def user(django_user_model):
         email='user@example.com',
         password='password',
     )
+
+
+@pytest.fixture
+def token(user):
+    payload = jwt_payload_handler(user)
+    jwt_token = jwt_encode_handler(payload)
+
+    return 'Bearer {}'.format(jwt_token)
