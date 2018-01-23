@@ -1,9 +1,9 @@
 -r base.txt
 
-pytest==3.3.1
+pytest==3.3.2
 pytest-django==3.1.2
 pytest-cov==2.5.1
-pytest-xdist==1.20.1
+pytest-xdist==1.22.0
 
 factory-boy==2.9.2
 snapshottest==0.5.0
