@@ -63,29 +63,25 @@ def parse_name(name):
     )
 
 
-def send_activation_email(user, request=None):
-    activation_email = ActivationEmail(
-        request=request,
-        context={
-            'user': user,
-            'activation_token': generate_activation_token(user)
-        })
+def send_activation_email(user):
+    activation_email = ActivationEmail(context={
+        'user': user,
+        'activation_token': generate_activation_token(user)
+    })
 
     activation_email.send(to=[user.email])
 
 
-def send_welcome_email(user, request=None):
-    welcome_email = WelcomeEmail(
-        request=request, context={
-            'user': user,
-        })
+def send_welcome_email(user):
+    welcome_email = WelcomeEmail(context={
+        'user': user,
+    })
 
     welcome_email.send(to=[user.email])
 
 
-def send_password_reset_email(user, request=None):
+def send_password_reset_email(user):
     password_reset_email = PasswordResetEmail(
-        request=request,
         context={
             'user': user,
             'password_reset_token': generate_password_reset_token(user)

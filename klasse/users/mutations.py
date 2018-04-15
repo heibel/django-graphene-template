@@ -27,7 +27,7 @@ class Register(graphene.Mutation):
             user = get_user_model().objects.create_user(
                 email=email, password=password, **parsed_name)
 
-            send_activation_email(user, request=info.context)
+            send_activation_email(user)
 
             return Register(success=user, errors=None)
         except IntegrityError:
@@ -51,7 +51,7 @@ class Activate(graphene.Mutation):
             user.is_active = True
             user.save()
 
-            send_welcome_email(user, request=info.context)
+            send_welcome_email(user)
 
             return Activate(success=True, errors=None)
         except get_user_model().DoesNotExist:
@@ -114,7 +114,7 @@ class PasswordReset(graphene.Mutation):
     def mutate(self, info, email):
         try:
             user = get_user_model().objects.get(email=email)
-            send_password_reset_email(user, request=info.context)
+            send_password_reset_email(user)
         except get_user_model().DoesNotExist:
             pass
 
