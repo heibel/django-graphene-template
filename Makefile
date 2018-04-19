@@ -18,13 +18,14 @@ graphql_schema:
 lint:
 	isort --recursive --diff .
 	yapf --recursive --parallel --diff --exclude "*/snapshots/*" --exclude "*/migrations/*" .
+	flake8 .
 
 clean:
 	isort --recursive .
 	yapf --recursive --parallel --in-place --exclude "*/snapshots/*" --exclude "*/migrations/*" .
 
 test:
-	pytest
+	pytest -n 4
 
 coverage:
 	pytest --cov=klasse --cov-report term-missing

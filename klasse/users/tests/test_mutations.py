@@ -613,7 +613,7 @@ def test_update_mutation_success(schema, rf, user):
                     firstName
                 }
             }
-        }   
+        }
     '''
 
     expected = {
