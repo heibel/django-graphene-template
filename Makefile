@@ -17,12 +17,13 @@ graphql_schema:
 
 lint:
 	pipenv run isort --recursive --check-only .
-	pipenv run black --check .
+	pipenv run black --check --quiet .
 	pipenv run flake8 .
+	pipenv run bandit --recursive .
 
 format:
 	pipenv run isort --recursive .
-	pipenv run black .
+	pipenv run black --quiet .
 
 test:
 	pipenv run pytest -n 4

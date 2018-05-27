@@ -1,0 +1,2 @@
+[bandit]
+exclude=conftest.py,.git,.cache,migrations,snapshots,tests
