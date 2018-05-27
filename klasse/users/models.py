@@ -11,13 +11,13 @@ from .managers import UserManager
 
 class User(TimeStampedModel, AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    middle_name = models.CharField(_('middle name'), max_length=30, blank=True)
-    email = models.EmailField(_('email address'), unique=True)
-    is_active = models.BooleanField(_('active'), default=False)
+    middle_name = models.CharField(_("middle name"), max_length=30, blank=True)
+    email = models.EmailField(_("email address"), unique=True)
+    is_active = models.BooleanField(_("active"), default=False)
 
     username = None
 
-    USERNAME_FIELD = 'email'
+    USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
     objects = UserManager()

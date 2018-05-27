@@ -6,6 +6,9 @@ from django.urls import path
 from django.views.decorators.csrf import csrf_exempt
 
 urlpatterns = [
-    path('graphql', csrf_exempt(GraphQLView.as_view(graphiql=settings.DEBUG)), name='graphql'),
-] + static(
-    settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path(
+        "graphql",
+        csrf_exempt(GraphQLView.as_view(graphiql=settings.DEBUG)),
+        name="graphql",
+    )
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

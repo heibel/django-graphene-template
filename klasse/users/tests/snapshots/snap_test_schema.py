@@ -7,8 +7,4 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
-snapshots['test_viewer_snapshot 1'] = {
-    'viewer': {
-        'email': 'user@example.com'
-    }
-}
+snapshots["test_viewer_snapshot 1"] = {"viewer": {"email": "user@example.com"}}

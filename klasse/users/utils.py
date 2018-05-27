@@ -22,7 +22,7 @@ def login_required(func):
     @wraps(func)
     def decorator(cls, info, *args, **kwargs):
         if not info.context.user.is_authenticated:
-            raise PermissionDenied('Not allowed')
+            raise PermissionDenied("Not allowed")
 
         return func(cls, info, *args, **kwargs)
 
@@ -30,18 +30,18 @@ def login_required(func):
 
 
 def jwt_encode_handler(payload):
-    return jwt.encode(payload, secret_key, algorithm='HS256').decode('utf-8')
+    return jwt.encode(payload, secret_key, algorithm="HS256").decode("utf-8")
 
 
 def jwt_decode_handler(token):
-    return jwt.decode(token, secret_key, algorithm='HS256')
+    return jwt.decode(token, secret_key, algorithm="HS256")
 
 
 def jwt_payload_handler(user):
     return {
-        'email': user.email,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30),
-        'orig_iat': timegm(datetime.datetime.utcnow().utctimetuple()),
+        "email": user.email,
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=30),
+        "orig_iat": timegm(datetime.datetime.utcnow().utctimetuple()),
     }
 
 
@@ -64,18 +64,15 @@ def parse_name(name):
 
 
 def send_activation_email(user):
-    activation_email = ActivationEmail(context={
-        'user': user,
-        'activation_token': generate_activation_token(user)
-    })
+    activation_email = ActivationEmail(
+        context={"user": user, "activation_token": generate_activation_token(user)}
+    )
 
     activation_email.send(to=[user.email])
 
 
 def send_welcome_email(user):
-    welcome_email = WelcomeEmail(context={
-        'user': user,
-    })
+    welcome_email = WelcomeEmail(context={"user": user})
 
     welcome_email.send(to=[user.email])
 
@@ -83,8 +80,9 @@ def send_welcome_email(user):
 def send_password_reset_email(user):
     password_reset_email = PasswordResetEmail(
         context={
-            'user': user,
-            'password_reset_token': generate_password_reset_token(user)
-        })
+            "user": user,
+            "password_reset_token": generate_password_reset_token(user),
+        }
+    )
 
     password_reset_email.send(to=[user.email])

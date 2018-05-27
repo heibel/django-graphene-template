@@ -7,7 +7,7 @@ from klasse.users.schema import UserType
 
 class Query(graphene.ObjectType):
     viewer = graphene.Field(UserType)
-    debug = graphene.Field(DjangoDebug, name='__debug')
+    debug = graphene.Field(DjangoDebug, name="__debug")
 
     @staticmethod
     def resolve_viewer(cls, info):

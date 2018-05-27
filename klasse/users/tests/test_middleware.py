@@ -4,17 +4,17 @@ from django.urls import reverse
 
 
 def test_missing_header(client):
-    query = '''
+    query = """
         query {
             viewer {
                 email
             }
         }
-    '''
+    """
 
-    expected = {'data': {'viewer': None}}
+    expected = {"data": {"viewer": None}}
 
-    url = '{}?{}'.format(reverse('graphql'), urlencode({'query': query}))
+    url = "{}?{}".format(reverse("graphql"), urlencode({"query": query}))
     response = client.get(url)
     result = response.json()
 
@@ -23,18 +23,18 @@ def test_missing_header(client):
 
 
 def test_invalid_header(client, token):
-    query = '''
+    query = """
         query {
             viewer {
                 email
             }
         }
-    '''
+    """
 
-    expected = {'data': {'viewer': None}}
+    expected = {"data": {"viewer": None}}
 
-    url = '{}?{}'.format(reverse('graphql'), urlencode({'query': query}))
-    response = client.get(url, HTTP_AUTHORIZATION=token.replace('Bearer', 'JWT'))
+    url = "{}?{}".format(reverse("graphql"), urlencode({"query": query}))
+    response = client.get(url, HTTP_AUTHORIZATION=token.replace("Bearer", "JWT"))
     result = response.json()
 
     assert response.status_code == 200
@@ -42,18 +42,18 @@ def test_invalid_header(client, token):
 
 
 def test_invalid_token(client):
-    query = '''
+    query = """
         query {
             viewer {
                 email
             }
         }
-    '''
+    """
 
-    expected = {'data': {'viewer': None}}
+    expected = {"data": {"viewer": None}}
 
-    url = '{}?{}'.format(reverse('graphql'), urlencode({'query': query}))
-    response = client.get(url, HTTP_AUTHORIZATION='Bearer some.invalid.token')
+    url = "{}?{}".format(reverse("graphql"), urlencode({"query": query}))
+    response = client.get(url, HTTP_AUTHORIZATION="Bearer some.invalid.token")
     result = response.json()
 
     assert response.status_code == 200
@@ -61,23 +61,17 @@ def test_invalid_token(client):
 
 
 def test_authenticated_user(client, user, token):
-    query = '''
+    query = """
         query {
             viewer {
                 email
             }
         }
-    '''
+    """
 
-    expected = {
-        'data': {
-            'viewer': {
-                'email': user.email,
-            }
-        }
-    }
+    expected = {"data": {"viewer": {"email": user.email}}}
 
-    url = '{}?{}'.format(reverse('graphql'), urlencode({'query': query}))
+    url = "{}?{}".format(reverse("graphql"), urlencode({"query": query}))
     response = client.get(url, HTTP_AUTHORIZATION=token)
     result = response.json()
 

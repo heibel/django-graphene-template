@@ -9,17 +9,17 @@ class UserFactory(DjangoModelFactory):
 
     class Meta:
         model = get_user_model()
-        django_get_or_create = ('email', )
+        django_get_or_create = ("email",)
 
-    email = factory.Faker('email')
-    first_name = factory.Faker('first_name')
-    last_name = factory.Faker('last_name')
+    email = factory.Faker("email")
+    first_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")
 
 
 class GroupFactory(DjangoModelFactory):
 
     class Meta:
         model = Group
-        django_get_or_create = ('name', )
+        django_get_or_create = ("name",)
 
-    name = factory.Sequence(lambda n: 'group.{}'.format(n + 1))
+    name = factory.Sequence(lambda n: "group.{}".format(n + 1))

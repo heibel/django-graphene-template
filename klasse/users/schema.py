@@ -8,7 +8,7 @@ class GroupType(DjangoObjectType):
 
     class Meta:
         model = Group
-        filter_fields = ('name', )
+        filter_fields = ("name",)
 
 
 class UserType(DjangoObjectType):

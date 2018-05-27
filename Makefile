@@ -22,7 +22,7 @@ lint:
 
 format:
 	pipenv run isort --recursive .
-	pipenv run black --check .
+	pipenv run black .
 
 test:
 	pipenv run pytest -n 4

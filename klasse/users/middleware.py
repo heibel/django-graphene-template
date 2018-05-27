@@ -9,7 +9,7 @@ from klasse.users.utils import jwt_decode_handler
 
 
 def get_authorization_header(request):
-    return request.META.get('HTTP_AUTHORIZATION', b'')
+    return request.META.get("HTTP_AUTHORIZATION", b"")
 
 
 def get_jwt_token(request):
@@ -18,7 +18,7 @@ def get_jwt_token(request):
     if not auth or not len(auth) == 2:
         return None
 
-    if smart_text(auth[0]) != 'Bearer':
+    if smart_text(auth[0]) != "Bearer":
         return None
 
     return auth[1]
@@ -32,7 +32,7 @@ def get_user(request):
 
     try:
         payload = jwt_decode_handler(token)
-        email = payload.get('email')
+        email = payload.get("email")
         user = get_user_model().objects.get(email=email)
 
         return user
@@ -46,7 +46,7 @@ class JWTAuthenticationMiddleware(object):
         self.get_response = get_response
 
     def __call__(self, request):
-        if not hasattr(request, 'user'):
+        if not hasattr(request, "user"):
             request.user = SimpleLazyObject(lambda: get_user(request))
 
         response = self.get_response(request)
