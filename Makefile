@@ -1,31 +1,31 @@
 .PHONY: shell runserver migrate collectstatic graphql_schema test
 
 shell:
-	python manage.py shell
+	pipenv run python manage.py shell
 
 runserver:
-	python manage.py runserver 0.0.0.0:8010
+	pipenv run python manage.py runserver 0.0.0.0:8010
 
 migrate:
-	python manage.py migrate
+	pipenv run python manage.py migrate
 
 collectstatic:
-	python manage.py collectstatic --link --noinput
+	pipenv run python manage.py collectstatic --link --noinput
 
 graphql_schema:
-	python manage.py graphql_schema --schema config.schema.schema --out schema.json
+	pipenv run python manage.py graphql_schema --schema config.schema.schema --out schema.json
 
 lint:
-	isort --recursive --diff .
-	yapf --recursive --parallel --diff --exclude "*/snapshots/*" --exclude "*/migrations/*" .
-	flake8 .
+	pipenv run isort --recursive --check-only .
+	pipenv run black --check .
+	pipenv run flake8 .
 
-clean:
-	isort --recursive .
-	yapf --recursive --parallel --in-place --exclude "*/snapshots/*" --exclude "*/migrations/*" .
+format:
+	pipenv run isort --recursive .
+	pipenv run black --check .
 
 test:
-	pytest -n 4
+	pipenv run pytest -n 4
 
 coverage:
-	pytest --cov=klasse --cov-report term-missing
+	pipenv run pytest --cov=klasse --cov-report term-missing
