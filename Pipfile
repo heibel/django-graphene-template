@@ -19,7 +19,7 @@ PyJWT = "*"
 [dev-packages]
 "flake8" = "*"
 isort = "*"
-black = "==18.5b0"
+black = "==18.5b1"
 pytest = "*"
 pytest-django = "*"
 pytest-cov = "*"
