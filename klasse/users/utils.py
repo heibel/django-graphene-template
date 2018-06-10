@@ -18,7 +18,6 @@ secret_key = settings.SECRET_KEY
 
 
 def login_required(func):
-
     @wraps(func)
     def decorator(cls, info, *args, **kwargs):
         if not info.context.user.is_authenticated:

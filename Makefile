@@ -1,4 +1,4 @@
-.PHONY: shell runserver migrate collectstatic graphql_schema test
+.PHONY: shell runserver migrate collectstatic graphql_schema lint format test coverage
 
 shell:
 	pipenv run python manage.py shell
@@ -16,14 +16,14 @@ graphql_schema:
 	pipenv run python manage.py graphql_schema --schema config.schema.schema --out schema.json
 
 lint:
-	pipenv run isort --recursive --check-only .
-	pipenv run black --check --quiet .
+	pipenv run isort --recursive --quiet --check-only .
+	pipenv run black --check --quiet --exclude="migrations|snapshots"  .
 	pipenv run flake8 .
 	pipenv run bandit --recursive .
 
 format:
-	pipenv run isort --recursive .
-	pipenv run black --quiet .
+	pipenv run isort --quiet --recursive .
+	pipenv run black --quiet --exclude="migrations|snapshots" .
 
 test:
 	pipenv run pytest -n 4

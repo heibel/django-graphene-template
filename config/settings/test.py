@@ -4,7 +4,6 @@ from config.settings.base import BASE_DIR, Base
 
 
 class NoMigrations(object):
-
     def __getitem__(self, item):
         return None
 

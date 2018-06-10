@@ -6,7 +6,6 @@ from django.contrib.auth.models import Group
 
 
 class UserFactory(DjangoModelFactory):
-
     class Meta:
         model = get_user_model()
         django_get_or_create = ("email",)
@@ -17,7 +16,6 @@ class UserFactory(DjangoModelFactory):
 
 
 class GroupFactory(DjangoModelFactory):
-
     class Meta:
         model = Group
         django_get_or_create = ("name",)

@@ -20,7 +20,6 @@ from .utils import (
 
 
 class Register(graphene.Mutation):
-
     class Arguments:
         email = graphene.String(required=True)
         password = graphene.String(required=True)
@@ -46,7 +45,6 @@ class Register(graphene.Mutation):
 
 
 class Activate(graphene.Mutation):
-
     class Arguments:
         activation_token = graphene.String(required=True)
 
@@ -70,7 +68,6 @@ class Activate(graphene.Mutation):
 
 
 class Login(graphene.Mutation):
-
     class Arguments:
         email = graphene.String()
         password = graphene.String()
@@ -92,7 +89,6 @@ class Login(graphene.Mutation):
 
 
 class RefreshToken(graphene.Mutation):
-
     class Arguments:
         token = graphene.String(required=True)
 
@@ -114,7 +110,6 @@ class RefreshToken(graphene.Mutation):
 
 
 class PasswordReset(graphene.Mutation):
-
     class Arguments:
         email = graphene.String()
 
@@ -131,7 +126,6 @@ class PasswordReset(graphene.Mutation):
 
 
 class PasswordResetConfirm(graphene.Mutation):
-
     class Arguments:
         email = graphene.String()
         password = graphene.String()
@@ -163,7 +157,6 @@ class PasswordResetConfirm(graphene.Mutation):
 
 
 class Update(graphene.Mutation):
-
     class Arguments:
         first_name = graphene.String()
         last_name = graphene.String()
